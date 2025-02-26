@@ -15,7 +15,7 @@ class ChatHive extends HiveObject {
   final String avatarUrl;
 
   @HiveField(3)
-  final DateTime lastMessageTime;
+  final DateTime? lastMessageTime;
 
   @HiveField(4)
   final String? lastMessagePreview;

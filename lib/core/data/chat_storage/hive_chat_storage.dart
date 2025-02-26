@@ -6,7 +6,9 @@ import '../../core.dart';
 class HiveLoggerStorage implements IChatStorage {
   static Future<bool>? _initFuture;
   static LazyBox<ChatHive>? _chatBox;
-  static LazyBox<MessageHive>? _messageBox;
+
+  final String messagesChatPostfix = "_chat";
+  static const String chatsHiveKey = "Chats";
 
   HiveLoggerStorage();
 
@@ -15,7 +17,7 @@ class HiveLoggerStorage implements IChatStorage {
       return;
     }
 
-    _initFuture = _initHive().then((_) => _openCurrentBox()).then((_) => true).onError((error, stackTrace) {
+    _initFuture = _initHive().then((_) => _openChatsBox()).then((_) => true).onError((error, stackTrace) {
       if (kDebugMode) {
         print("error: ${error.toString()}, stackTrace:${stackTrace.toString()}");
       }
@@ -40,91 +42,106 @@ class HiveLoggerStorage implements IChatStorage {
 
   @override
   Future<void> storeMessage(Message message) async {
-    if (!await _ensureStorageInitialized()) {
-      return;
-    }
+    await _getBoxById<MessageHive>(
+      _getMessagesKey(message.chatId),
+      action: (box) => box.add(MessageHive.fromMessage(message)),
+      closeAfterRetrieve: true,
+    );
 
-    try {
-      await _messageBox!.add(MessageHive.fromMessage(message));
-    } catch (e, s) {
-      if (kDebugMode) {
-        print("error: ${e.toString()}, stackTrace:${s.toString()}");
-      }
-    }
+    updateChatPreview(message.chatId);
   }
 
   @override
   Future<List<Chat>> getChats() async {
-    final box = await _getBoxById<ChatHive>("Chats");
-
     var collection = <Chat>[];
 
-    for (var key in box.keys) {
-      var message = await box.get(key);
+    await _getBoxById<ChatHive>(
+      chatsHiveKey,
+      action: (box) async {
+        for (var key in box.keys) {
+          var chat = await box.get(key);
 
-      if (message == null) continue;
+          if (chat == null) continue;
 
-      collection.add(
-        Chat(
-          id: message.id,
-          contactName: message.contactName,
-          avatar: message.avatarUrl,
-          lastMessageTime: message.lastMessageTime,
-        ),
-      );
-    }
-
+          collection.add(toChat(chat));
+          break;
+        }
+      },
+    );
     return collection;
   }
 
   @override
   Future<List<Message>> getMessages(String chatId) async {
-    final box = await _getBoxById<MessageHive>("Messages");
-
     var collection = <Message>[];
 
-    for (var key in box.keys) {
-      var message = await box.get(key);
+    await _getBoxById<MessageHive>(
+      _getMessagesKey(chatId),
+      action: (box) async {
+        for (var key in box.keys) {
+          var message = await box.get(key);
 
-      if (message == null || message.chatId != chatId) continue;
+          if (message == null || message.chatId != chatId) continue;
 
-      collection.add(
-        Message(
-          id: message.id,
-          chatId: message.chatId,
-          sender: message.sender,
-          text: message.text,
-          photoPath: message.photoPath,
-          timestamp: message.timestamp,
-        ),
-      );
-    }
-
+          collection.add(toMessage(message));
+          break;
+        }
+      },
+      closeAfterRetrieve: true,
+    );
     return collection;
   }
 
   @override
   Future<void> deleteChat(String chatId) async {
-    final chatBox = await _getBoxById<ChatHive>("Chats");
+    await _getBoxById<ChatHive>(chatsHiveKey, action: (box) => box.delete(chatId));
 
-    chatBox.delete(chatId);
+    await _getBoxById<MessageHive>(_getMessagesKey(chatId), action: (box) async {
+      for (var key in box.keys) {
+        var message = await box.get(key);
 
-    final messagesBox = await _getBoxById<MessageHive>("Messages");
+        if (message == null || message.chatId != chatId) continue;
 
-    for (var key in messagesBox.keys) {
-      var message = await messagesBox.get(key);
-
-      if (message == null || message.chatId != chatId) continue;
-
-      messagesBox.delete(key);
-    }
+        box.delete(key);
+        break;
+      }
+    });
   }
 
   @override
-  Future<void> deleteMessage(String messageId) async {
-    final messagesBox = await _getBoxById<MessageHive>("Messages");
+  Future<void> deleteMessage(message) async {
+    await _getBoxById<MessageHive>(_getMessagesKey(message.chatId), action: (box) {
+      box.delete(message.id);
+    }, closeAfterRetrieve: true);
 
-    messagesBox.delete(messageId);
+    updateChatPreview(message.chatId);
+  }
+
+  Future<void> updateChatPreview(String chatId) async {
+    MessageHive? lastMessage;
+
+    await _getBoxById<MessageHive>(_getMessagesKey(chatId), action: (box) {
+      lastMessage = box.keys.last;
+    }, closeAfterRetrieve: true);
+
+    if (lastMessage == null) return;
+
+    await _getBoxById<ChatHive>(chatsHiveKey, action: (box) async {
+      for (var key in box.keys) {
+        var chat = await box.get(key);
+
+        if (chat == null || chatId != chat.id) continue;
+
+        final chatModel = toChat(chat).copyWith(
+          lastMessageId: lastMessage!.id,
+          lastMessagePreview: lastMessage!.photoPath,
+          lastMessageTime: lastMessage!.timestamp,
+        );
+
+        box.put(key, ChatHive.fromChat(chatModel));
+        break;
+      }
+    });
   }
 
   Future<void> _initHive() async {
@@ -133,9 +150,8 @@ class HiveLoggerStorage implements IChatStorage {
     Hive.registerAdapter<MessageHive>(MessageHiveAdapter());
   }
 
-  Future<void> _openCurrentBox() async {
-    _chatBox = await Hive.openLazyBox<ChatHive>("Chats");
-    _messageBox = await Hive.openLazyBox<MessageHive>("Messages");
+  Future<void> _openChatsBox() async {
+    _chatBox = await Hive.openLazyBox<ChatHive>(chatsHiveKey);
   }
 
   Future<bool> _ensureStorageInitialized() {
@@ -149,12 +165,36 @@ class HiveLoggerStorage implements IChatStorage {
   @override
   void dispose() {
     _chatBox?.close();
-    _messageBox?.close();
   }
 
-  Future<LazyBox<T>> _getBoxById<T>(String boxId) async {
+  Future<void> _getBoxById<T>(String boxId, {Function(LazyBox<T> box)? action, bool closeAfterRetrieve = false}) async {
     await _ensureStorageInitialized();
 
-    return Hive.isBoxOpen(boxId) ? Future.value(Hive.lazyBox(boxId)) : await Hive.openLazyBox<T>(boxId);
+    LazyBox<T> box = Hive.isBoxOpen(boxId) ? Hive.lazyBox(boxId) : await Hive.openLazyBox<T>(boxId);
+
+    action?.call(box);
+    if (closeAfterRetrieve) box.close();
+  }
+
+  String _getMessagesKey(String chatId) => chatId + messagesChatPostfix;
+
+  Message toMessage(MessageHive message) {
+    return Message(
+      id: message.id,
+      chatId: message.chatId,
+      sender: message.sender,
+      text: message.text,
+      photoPath: message.photoPath,
+      timestamp: message.timestamp,
+    );
+  }
+
+  Chat toChat(ChatHive message) {
+    return Chat(
+      id: message.id,
+      contactName: message.contactName,
+      avatar: message.avatarUrl,
+      lastMessageTime: message.lastMessageTime,
+    );
   }
 }

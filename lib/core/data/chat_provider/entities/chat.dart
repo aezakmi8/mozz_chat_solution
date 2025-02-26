@@ -8,7 +8,8 @@ class Chat with _$Chat {
     required String id,
     required String contactName,
     required String avatar,
-    required DateTime lastMessageTime,
+    String? lastMessageId,
+    DateTime? lastMessageTime,
     String? lastMessagePreview,
   }) = _Chat;
 }

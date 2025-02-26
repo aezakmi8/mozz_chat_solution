@@ -11,7 +11,7 @@ abstract interface class IChatStorage {
 
   Future<void> deleteChat(String chatId);
 
-  Future<void> deleteMessage(String messageId);
+  Future<void> deleteMessage(Message message);
 
   void dispose();
 }
