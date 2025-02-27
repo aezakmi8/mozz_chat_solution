@@ -12,10 +12,10 @@ part 'chat_list_bloc.freezed.dart';
 
 @injectable
 class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
-  final IChatProvider chatProvider;
+  final IChatProvider _chatProvider;
   StreamSubscription? _subscription;
 
-  ChatListBloc(this.chatProvider) : super(const ChatListState.loading()) {
+  ChatListBloc(this._chatProvider) : super(const ChatListState.loading()) {
     on<_Load>(_onLoad);
     on<_Update>(_onUpdate);
     on<_Delete>(_onDelete);
@@ -23,7 +23,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
   FutureOr<void> _onLoad(_Load event, Emitter<ChatListState> emit) {
     _subscription?.cancel();
-    _subscription = chatProvider.chatsStream.listen((chats) {
+    _subscription = _chatProvider.chatsStream.listen((chats) {
       add(ChatListEvent.update(chats: chats));
     });
   }
@@ -34,6 +34,6 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }
 
   Future<void> _onDelete(_Delete event, Emitter<ChatListState> emit) async {
-    await chatProvider.deleteChat(event.chatId);
+    await _chatProvider.deleteChat(event.chatId);
   }
 }

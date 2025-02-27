@@ -5,7 +5,11 @@ import 'injection.config.dart';
 
 final GetIt locator = GetIt.instance;
 
-@InjectableInit(initializerName: 'init', preferRelativeImports: true, asExtension: true)
+@InjectableInit(
+  initializerName: 'init',
+  preferRelativeImports: true,
+  asExtension: true,
+)
 void configureDependencies() {
   locator.init();
 }

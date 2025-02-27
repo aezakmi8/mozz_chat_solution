@@ -3,14 +3,14 @@ import 'package:hive_flutter/adapters.dart';
 
 import '../../core.dart';
 
-class HiveLoggerStorage implements IChatStorage {
+class HiveChatStorage implements IChatStorage {
   static Future<bool>? _initFuture;
   static LazyBox<ChatHive>? _chatBox;
 
   final String messagesChatPostfix = "_chat";
   static const String chatsHiveKey = "Chats";
 
-  HiveLoggerStorage();
+  HiveChatStorage();
 
   void init() async {
     if (_initFuture != null) {
