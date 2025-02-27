@@ -6,7 +6,7 @@ import 'chat_provider_interface.dart';
 class ChatProvider implements IChatProvider {
   final IChatStorage _storage;
   final StreamController<List<Chat>> _chatsStreamController = StreamController.broadcast();
-  final Map<String, StreamController<List<Message>>> _messagesStreamControllers = {};
+  final Map<String, StreamController<List<MessageC>>> _messagesStreamControllers = {};
 
   ChatProvider(this._storage);
 
@@ -19,7 +19,7 @@ class ChatProvider implements IChatProvider {
   Stream<List<Chat>> get chatsStream => _chatsStreamController.stream;
 
   @override
-  Stream<List<Message>> messagesStream(String chatId) {
+  Stream<List<MessageC>> messagesStream(String chatId) {
     if (!_messagesStreamControllers.containsKey(chatId)) {
       _messagesStreamControllers[chatId] = StreamController.broadcast();
       _updateMessagesStream(chatId);
@@ -34,7 +34,7 @@ class ChatProvider implements IChatProvider {
   }
 
   @override
-  Future<void> storeMessage(Message message) async {
+  Future<void> storeMessage(MessageC message) async {
     await _storage.storeMessage(message);
     _updateChatsStream();
     _updateMessagesStream(message.chatId);
@@ -49,7 +49,7 @@ class ChatProvider implements IChatProvider {
   }
 
   @override
-  Future<void> deleteMessage(Message message) async {
+  Future<void> deleteMessage(MessageC message) async {
     await _storage.deleteMessage(message);
     _updateMessagesStream(message.chatId);
     _updateChatsStream();

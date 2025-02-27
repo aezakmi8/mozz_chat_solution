@@ -32,7 +32,7 @@ class MessageHive extends HiveObject {
     this.photoPath,
   );
 
-  static MessageHive fromMessage(Message message) => MessageHive(
+  static MessageHive fromMessage(MessageC message) => MessageHive(
         message.id,
         message.chatId,
         message.sender,
