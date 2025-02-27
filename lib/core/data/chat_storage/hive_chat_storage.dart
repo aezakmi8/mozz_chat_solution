@@ -41,7 +41,7 @@ class HiveLoggerStorage implements IChatStorage {
   }
 
   @override
-  Future<void> storeMessage(Message message) async {
+  Future<void> storeMessage(MessageC message) async {
     await _getBoxById<MessageHive>(
       _getMessagesKey(message.chatId),
       action: (box) => box.add(MessageHive.fromMessage(message)),
@@ -72,8 +72,8 @@ class HiveLoggerStorage implements IChatStorage {
   }
 
   @override
-  Future<List<Message>> getMessages(String chatId) async {
-    var collection = <Message>[];
+  Future<List<MessageC>> getMessages(String chatId) async {
+    var collection = <MessageC>[];
 
     await _getBoxById<MessageHive>(
       _getMessagesKey(chatId),
@@ -178,8 +178,8 @@ class HiveLoggerStorage implements IChatStorage {
 
   String _getMessagesKey(String chatId) => chatId + messagesChatPostfix;
 
-  Message toMessage(MessageHive message) {
-    return Message(
+  MessageC toMessage(MessageHive message) {
+    return MessageC(
       id: message.id,
       chatId: message.chatId,
       sender: message.sender,
