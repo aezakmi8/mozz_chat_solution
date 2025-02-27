@@ -47,8 +47,50 @@ class _ChatScreenState extends State<ChatScreen> {
         )),
       child: Scaffold(
         appBar: AppBar(title: const Text('Чат')),
-        body: null, // todo: implement chat body
+        body: BlocBuilder<ChatBloc, ChatState>(
+          builder: (context, state) {
+            return state.map(
+              loading: (_) => const _LoadingContent(),
+              loaded: (loadedState) => _LoadedContent(_chatController),
+            );
+          },
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _chatController.dispose();
+    super.dispose();
+  }
+}
+
+class _LoadingContent extends StatelessWidget {
+  const _LoadingContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: CircularProgressIndicator());
+  }
+}
+
+class _LoadedContent extends StatelessWidget {
+  final ChatController _chatController;
+
+  const _LoadedContent(this._chatController);
+
+  @override
+  Widget build(BuildContext context) {
+    return ChatView(
+        chatController: _chatController,
+        onSendTap: (message, replyMessage, messageType) {
+          context.read<ChatBloc>().add(ChatEvent.sendClicked(
+                message,
+                replyMessage,
+                messageType,
+              ));
+        },
+        chatViewState: ChatViewState.hasMessages);
   }
 }

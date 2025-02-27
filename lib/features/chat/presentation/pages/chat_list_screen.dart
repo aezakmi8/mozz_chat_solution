@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mozz_chat_solution/core/data/chat_provider/entities/chat.dart';
 import 'package:mozz_chat_solution/features/chat/presentation/manager/chat_list_bloc.dart';
 
+import '../../../../injection/injection.dart';
 import '../../../../router/app_router.dart';
 
 @RoutePage()
@@ -12,15 +13,18 @@ class ChatListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Чаты')),
-      body: BlocBuilder<ChatListBloc, ChatListState>(
-        builder: (context, state) {
-          return state.map(
-            loading: (_) => const _LoadingContent(),
-            loaded: (loadedState) => _LoadedContent(loadedState.chats),
-          );
-        },
+    return BlocProvider(
+      create: (_) => locator<ChatListBloc>()..add(const ChatListEvent.load()),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Чаты')),
+        body: BlocBuilder<ChatListBloc, ChatListState>(
+          builder: (context, state) {
+            return state.map(
+              loading: (_) => const _LoadingContent(),
+              loaded: (loadedState) => _LoadedContent(loadedState.chats),
+            );
+          },
+        ),
       ),
     );
   }

@@ -1,5 +1,8 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
+import '../features/features.dart';
+import '../core/core.dart';
 
 part 'app_router.gr.dart';
 
@@ -12,7 +15,7 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
         AutoRoute(
           page: ChatListRoute.page,
-          path: '/chatlist',
+          path: '/',
           children: [
             AutoRoute(page: ChatRoute.page, path: 'chat'),
           ],
