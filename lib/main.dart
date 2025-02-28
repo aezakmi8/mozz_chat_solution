@@ -12,22 +12,22 @@ Future<void> main() async {
   // ---           mock init section           ---
   final chatStorage = locator<IChatStorage>();
   if (await chatStorage.getChats().then((onValue) => onValue.isEmpty)) {
-    chatStorage.storeChat(Chat(
+    await chatStorage.storeChat(Chat(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       contactName: "Виктор Власов",
       avatar: "ВВ",
     ));
-    chatStorage.storeChat(Chat(
+    await chatStorage.storeChat(Chat(
       id: (DateTime.now().millisecondsSinceEpoch - 441).toString(),
       contactName: "Саша Алексеев",
       avatar: "СА",
     ));
-    chatStorage.storeChat(Chat(
+    await chatStorage.storeChat(Chat(
       id: (DateTime.now().millisecondsSinceEpoch - 452).toString(),
       contactName: "Петр Жаринов",
       avatar: "ПЖ",
     ));
-    chatStorage.storeChat(Chat(
+    await chatStorage.storeChat(Chat(
       id: (DateTime.now().millisecondsSinceEpoch - 45).toString(),
       contactName: "Алина Жукова",
       avatar: "АЖ",

@@ -64,7 +64,6 @@ class HiveChatStorage implements IChatStorage {
           if (chat == null) continue;
 
           collection.add(toChat(chat));
-          break;
         }
       },
     );
@@ -84,7 +83,6 @@ class HiveChatStorage implements IChatStorage {
           if (message == null || message.chatId != chatId) continue;
 
           collection.add(toMessage(message));
-          break;
         }
       },
       closeAfterRetrieve: true,
