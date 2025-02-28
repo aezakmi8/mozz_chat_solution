@@ -55,16 +55,6 @@ class ChatProvider implements IChatProvider {
     _updateChatsStream();
   }
 
-  void _updateChatsStream() async {
-    final chats = await _storage.getChats();
-    _chatsStreamController.add(chats);
-  }
-
-  void _updateMessagesStream(String chatId) async {
-    final messages = await _storage.getMessages(chatId);
-    _messagesStreamControllers[chatId]?.add(messages);
-  }
-
   @override
   void dispose() {
     _chatsStreamController.close();
@@ -73,5 +63,20 @@ class ChatProvider implements IChatProvider {
     }
     _messagesStreamControllers.clear();
     _storage.dispose();
+  }
+
+  @override
+  Future<List<Chat>> getChats() {
+    return _storage.getChats();
+  }
+
+  void _updateChatsStream() async {
+    final chats = await getChats();
+    _chatsStreamController.add(chats);
+  }
+
+  void _updateMessagesStream(String chatId) async {
+    final messages = await _storage.getMessages(chatId);
+    _messagesStreamControllers[chatId]?.add(messages);
   }
 }

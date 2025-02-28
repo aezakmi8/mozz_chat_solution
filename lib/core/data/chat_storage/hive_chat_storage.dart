@@ -111,7 +111,7 @@ class HiveChatStorage implements IChatStorage {
   @override
   Future<void> deleteMessage(message) async {
     await _getBoxById<MessageHive>(_getMessagesKey(message.chatId), action: (box) {
-      box.delete(message.id);
+      return box.delete(message.id);
     }, closeAfterRetrieve: true);
 
     updateChatPreview(message.chatId);
@@ -121,7 +121,7 @@ class HiveChatStorage implements IChatStorage {
     MessageHive? lastMessage;
 
     await _getBoxById<MessageHive>(_getMessagesKey(chatId), action: (box) {
-      lastMessage = box.keys.last;
+      return lastMessage = box.keys.last;
     }, closeAfterRetrieve: true);
 
     if (lastMessage == null) return;
@@ -167,12 +167,13 @@ class HiveChatStorage implements IChatStorage {
     _chatBox?.close();
   }
 
-  Future<void> _getBoxById<T>(String boxId, {Function(LazyBox<T> box)? action, bool closeAfterRetrieve = false}) async {
+  Future<void> _getBoxById<T>(String boxId,
+      {required Future<void> Function(LazyBox<T> box) action, bool closeAfterRetrieve = false}) async {
     await _ensureStorageInitialized();
 
     LazyBox<T> box = Hive.isBoxOpen(boxId) ? Hive.lazyBox(boxId) : await Hive.openLazyBox<T>(boxId);
 
-    action?.call(box);
+    await action.call(box);
     if (closeAfterRetrieve) box.close();
   }
 

@@ -14,26 +14,46 @@ part 'chat_list_bloc.freezed.dart';
 class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   final IChatProvider _chatProvider;
   StreamSubscription? _subscription;
+  String _currentFilter = '';
 
   ChatListBloc(this._chatProvider) : super(const ChatListState.loading()) {
     on<_Load>(_onLoad);
     on<_Update>(_onUpdate);
     on<_Delete>(_onDelete);
+    on<_Filter>(_onFilter);
   }
 
-  FutureOr<void> _onLoad(_Load event, Emitter<ChatListState> emit) {
+  Future<void> _onLoad(_Load event, Emitter<ChatListState> emit) async {
     _subscription?.cancel();
+
+    final currentChats = await _chatProvider.getChats();
+    add(ChatListEvent.update(chats: currentChats));
+
     _subscription = _chatProvider.chatsStream.listen((chats) {
       add(ChatListEvent.update(chats: chats));
     });
   }
 
   FutureOr<void> _onUpdate(_Update event, Emitter<ChatListState> emit) {
-    final sortedChats = event.chats..sort((a, b) => (b.lastMessageTime ?? DateTime(0)).compareTo(a.lastMessageTime ?? DateTime(0)));
-    emit(ChatListState.loaded(sortedChats));
+    final filteredChats = _filterChats(event.chats, _currentFilter);
+    emit(ChatListState.loaded(filteredChats));
   }
 
   Future<void> _onDelete(_Delete event, Emitter<ChatListState> emit) async {
     await _chatProvider.deleteChat(event.chatId);
+  }
+
+  FutureOr<void> _onFilter(_Filter event, Emitter<ChatListState> emit) {
+    _currentFilter = event.query.toLowerCase();
+    if (state is _Loaded) {
+      final loadedState = state as _Loaded;
+      final filteredChats = _filterChats(loadedState.chats, _currentFilter);
+      emit(ChatListState.loaded(filteredChats));
+    }
+  }
+
+  List<Chat> _filterChats(List<Chat> chats, String query) {
+    if (query.isEmpty) return chats;
+    return chats.where((chat) => chat.contactName.toLowerCase().contains(query)).toList();
   }
 }
