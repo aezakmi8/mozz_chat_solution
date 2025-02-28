@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/core.dart';
 
@@ -58,7 +61,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     await _chatProvider.storeMessage(newMessage);
   }
 
-  FutureOr<void> _onPickImageClicked(_PickImageClicked event, Emitter<ChatState> emit) {}
+  Future<void> _onPickImageClicked(_PickImageClicked event, Emitter<ChatState> emit) async {
+    final picker = ImagePicker();
+    final result = await picker.pickImage(imageQuality: 70, maxWidth: 1440, source: ImageSource.gallery);
+
+    if (result == null) return;
+
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final savedImage = await File(result.path).copy('${directory.path}/$fileName');
+    final bytes = await result.readAsBytes();
+
+    final newMessage = MessageEntity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      chatId: chatId!,
+      sender: user!.name,
+      timestamp: DateTime.now(),
+      photoPath: savedImage.path,
+      photoSize: bytes.length,
+      text: null,
+    );
+
+    await _chatProvider.storeMessage(newMessage);
+  }
 
   @override
   Future<void> close() {
