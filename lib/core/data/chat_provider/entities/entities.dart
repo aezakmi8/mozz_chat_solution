@@ -1,3 +1,4 @@
 //GENERATED BARREL FILE
-export 'chat.dart';
-export 'message.dart';
+export 'chat_entity.dart';
+export 'message_entity.dart';
+export 'user_entity.dart';

@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:mozz_chat_solution/core/data/chat_provider/entities/message.dart';
+import 'package:mozz_chat_solution/core/data/chat_provider/entities/message_entity.dart';
 
 part 'message_hive.g.dart';
 
@@ -23,6 +23,9 @@ class MessageHive extends HiveObject {
   @HiveField(5)
   final String? photoPath;
 
+  @HiveField(6)
+  final int? photoSize;
+
   MessageHive(
     this.id,
     this.chatId,
@@ -30,14 +33,16 @@ class MessageHive extends HiveObject {
     this.timestamp,
     this.text,
     this.photoPath,
+    this.photoSize,
   );
 
-  static MessageHive fromMessage(MessageC message) => MessageHive(
+  static MessageHive fromMessage(MessageEntity message) => MessageHive(
         message.id,
         message.chatId,
         message.sender,
         message.timestamp,
         message.text,
         message.photoPath,
+        message.photoSize,
       );
 }

@@ -4,7 +4,7 @@ part of 'chat_list_bloc.dart';
 class ChatListEvent with _$ChatListEvent {
   const factory ChatListEvent.load() = _Load;
 
-  const factory ChatListEvent.update({required List<Chat> chats}) = _Update;
+  const factory ChatListEvent.update({required Iterable<ChatEntity> chats}) = _Update;
 
   const factory ChatListEvent.delete({required String chatId}) = _Delete;
 

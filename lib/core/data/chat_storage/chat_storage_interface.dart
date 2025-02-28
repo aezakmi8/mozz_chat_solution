@@ -1,17 +1,17 @@
 import '../../core.dart';
 
 abstract interface class IChatStorage {
-  Future<void> storeChat(Chat chat);
+  Future<void> storeChat(ChatEntity chat);
 
-  Future<void> storeMessage(MessageC chat);
+  Future<void> storeMessage(MessageEntity chat);
 
-  Future<List<Chat>> getChats();
+  Future<Iterable<ChatEntity>> getChats();
 
-  Future<List<MessageC>> getMessages(String chatId);
+  Future<Iterable<MessageEntity>> getMessages(String chatId, {int? take, int? skip});
 
   Future<void> deleteChat(String chatId);
 
-  Future<void> deleteMessage(MessageC message);
+  Future<void> deleteMessage(MessageEntity message);
 
   void dispose();
 }

@@ -1,19 +1,21 @@
 import 'entities/entities.dart';
 
 abstract interface class IChatProvider {
-  Stream<List<Chat>> get chatsStream;
+  Stream<Iterable<ChatEntity>> get chatsStream;
 
-  Stream<List<MessageC>> messagesStream(String chatId);
+  Stream<Iterable<MessageEntity>> messagesStream(String chatId);
 
-  Future<void> storeChat(Chat chat);
+  Future<void> storeChat(ChatEntity chat);
 
-  Future<void> storeMessage(MessageC chat);
+  Future<void> storeMessage(MessageEntity chat);
 
   Future<void> deleteChat(String chatId);
 
-  Future<void> deleteMessage(MessageC message);
+  Future<void> deleteMessage(MessageEntity message);
 
   void dispose();
 
-  Future<List<Chat>> getChats();
+  Future<Iterable<ChatEntity>> getChats();
+
+  Future<Iterable<MessageEntity>> getMessages(String chatId, {int? take, int? skip});
 }
