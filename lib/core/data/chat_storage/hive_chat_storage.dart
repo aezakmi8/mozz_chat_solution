@@ -26,7 +26,7 @@ class HiveChatStorage implements IChatStorage {
   }
 
   @override
-  Future<void> storeChat(Chat chat) async {
+  Future<void> storeChat(ChatEntity chat) async {
     if (!await _ensureStorageInitialized()) {
       return;
     }
@@ -41,7 +41,7 @@ class HiveChatStorage implements IChatStorage {
   }
 
   @override
-  Future<void> storeMessage(MessageC message) async {
+  Future<void> storeMessage(MessageEntity message) async {
     await _getBoxById<MessageHive>(
       _getMessagesKey(message.chatId),
       action: (box) => box.add(MessageHive.fromMessage(message)),
@@ -52,8 +52,8 @@ class HiveChatStorage implements IChatStorage {
   }
 
   @override
-  Future<List<Chat>> getChats() async {
-    var collection = <Chat>[];
+  Future<List<ChatEntity>> getChats() async {
+    var collection = <ChatEntity>[];
 
     await _getBoxById<ChatHive>(
       chatsHiveKey,
@@ -71,13 +71,23 @@ class HiveChatStorage implements IChatStorage {
   }
 
   @override
-  Future<List<MessageC>> getMessages(String chatId) async {
-    var collection = <MessageC>[];
+  Future<List<MessageEntity>> getMessages(String chatId, {int? take, int? skip}) async {
+    var collection = <MessageEntity>[];
 
     await _getBoxById<MessageHive>(
       _getMessagesKey(chatId),
       action: (box) async {
-        for (var key in box.keys) {
+        Iterable<dynamic> keys = box.keys;
+
+        if (skip != null && skip > 0) {
+          keys = keys.skip(skip).toList();
+        }
+
+        if (take != null && take > 0) {
+          keys = keys.take(take).toList();
+        }
+
+        for (var key in keys) {
           var message = await box.get(key);
 
           if (message == null || message.chatId != chatId) continue;
@@ -118,8 +128,9 @@ class HiveChatStorage implements IChatStorage {
   Future<void> updateChatPreview(String chatId) async {
     MessageHive? lastMessage;
 
-    await _getBoxById<MessageHive>(_getMessagesKey(chatId), action: (box) {
-      return lastMessage = box.keys.last;
+    await _getBoxById<MessageHive>(_getMessagesKey(chatId), action: (box) async {
+      var chat = await box.get(box.keys.last);
+      lastMessage = chat;
     }, closeAfterRetrieve: true);
 
     if (lastMessage == null) return;
@@ -132,14 +143,14 @@ class HiveChatStorage implements IChatStorage {
 
         final chatModel = toChat(chat).copyWith(
           lastMessageId: lastMessage!.id,
-          lastMessagePreview: lastMessage!.photoPath,
+          lastMessagePreview: lastMessage!.text,
           lastMessageTime: lastMessage!.timestamp,
         );
 
         box.put(key, ChatHive.fromChat(chatModel));
         break;
       }
-    });
+    }, closeAfterRetrieve: false);
   }
 
   Future<void> _initHive() async {
@@ -172,28 +183,31 @@ class HiveChatStorage implements IChatStorage {
     LazyBox<T> box = Hive.isBoxOpen(boxId) ? Hive.lazyBox(boxId) : await Hive.openLazyBox<T>(boxId);
 
     await action.call(box);
-    if (closeAfterRetrieve) box.close();
+    //if (closeAfterRetrieve) box.close();
   }
 
   String _getMessagesKey(String chatId) => chatId + messagesChatPostfix;
 
-  MessageC toMessage(MessageHive message) {
-    return MessageC(
+  MessageEntity toMessage(MessageHive message) {
+    return MessageEntity(
       id: message.id,
       chatId: message.chatId,
       sender: message.sender,
       text: message.text,
       photoPath: message.photoPath,
       timestamp: message.timestamp,
+      photoSize: message.photoSize,
     );
   }
 
-  Chat toChat(ChatHive message) {
-    return Chat(
+  ChatEntity toChat(ChatHive message) {
+    return ChatEntity(
       id: message.id,
       contactName: message.contactName,
       avatar: message.avatarUrl,
+      lastMessageId: message.lastMessageId,
       lastMessageTime: message.lastMessageTime,
+      lastMessagePreview: message.lastMessagePreview,
     );
   }
 }

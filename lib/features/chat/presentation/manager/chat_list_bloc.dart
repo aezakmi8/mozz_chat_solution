@@ -52,8 +52,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     }
   }
 
-  List<Chat> _filterChats(List<Chat> chats, String query) {
+  Iterable<ChatEntity> _filterChats(Iterable<ChatEntity> chats, String query) {
     if (query.isEmpty) return chats;
-    return chats.where((chat) => chat.contactName.toLowerCase().contains(query)).toList();
+    return chats.where((chat) => chat.contactName.toLowerCase().contains(query));
   }
 }

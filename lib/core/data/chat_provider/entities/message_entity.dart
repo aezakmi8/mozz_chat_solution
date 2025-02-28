@@ -1,15 +1,16 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'message.freezed.dart';
+part 'message_entity.freezed.dart';
 
 @freezed
-class MessageC with _$MessageC {
-  factory MessageC({
+class MessageEntity with _$MessageEntity {
+  factory MessageEntity({
     required String id,
     required String chatId,
     required String sender,
     required String? text,
-    required String? photoPath,
     required DateTime timestamp,
-  }) = _MessageC;
+    String? photoPath,
+    int? photoSize,
+  }) = _MessageEntity;
 }

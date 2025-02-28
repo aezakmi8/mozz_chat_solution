@@ -1,11 +1,14 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mozz_chat_solution/core/data/chat_provider/entities/chat.dart';
+import 'package:mozz_chat_solution/core/core.dart';
+import 'package:mozz_chat_solution/core/data/chat_provider/entities/chat_entity.dart';
 import 'package:mozz_chat_solution/features/chat/presentation/manager/chat_list_bloc.dart';
 
+import '../../../../app.dart';
 import '../../../../injection/injection.dart';
 import '../../../../router/app_router.dart';
+import '../widgets/custom_list_tile.dart';
 
 @RoutePage()
 class ChatListScreen extends StatelessWidget {
@@ -26,7 +29,7 @@ class ChatListScreen extends StatelessWidget {
                       hintText: 'Поиск',
                       hintStyle: const TextStyle(color: Color(0xFF9DB7CB)),
                       filled: true,
-                      fillColor: const Color(0xFFEDF2F6),
+                      fillColor: strokeColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -63,7 +66,7 @@ class _LoadingContent extends StatelessWidget {
 }
 
 class _LoadedContent extends StatelessWidget {
-  final List<Chat> chats;
+  final Iterable<ChatEntity> chats;
 
   const _LoadedContent(this.chats);
 
@@ -72,7 +75,7 @@ class _LoadedContent extends StatelessWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          final chat = chats[index];
+          final chat = chats.elementAt(index);
           return Dismissible(
             key: Key(chat.id),
             direction: DismissDirection.endToStart,
@@ -81,7 +84,10 @@ class _LoadedContent extends StatelessWidget {
             },
             child: buildChatListTile(
               chat,
-              () => AutoRouter.of(context).push(ChatRoute(chat: chat)),
+              () => AutoRouter.of(context).push(ChatRoute(
+                chat: chat,
+                user: UserEntity(name: "user_name"),
+              )),
             ),
           );
         },
@@ -90,50 +96,14 @@ class _LoadedContent extends StatelessWidget {
     );
   }
 
-  Widget buildChatListTile(Chat chat, GestureTapCallback? onTap) {
-    return ListTile(
-      leading: Container(
-        width: 50,
-        height: 50,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1FDB5F),
-              Color(0xFF31C764),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            chat.avatar,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              fontSize: 20,
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        chat.contactName,
-        style: const TextStyle(
-          color: Color(0xFF2B333E),
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      subtitle: Text(
-        chat.lastMessagePreview ?? " ",
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ), // todo: add me
-      trailing: chat.lastMessageTime == null ? null : Text(_formatTimestamp(chat.lastMessageTime!)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-      tileColor: Colors.white,
-      shape: const Border(bottom: BorderSide(color: Color(0xFFEDF2F6), width: 1)),
+  Widget buildChatListTile(ChatEntity chat, GestureTapCallback? onTap) {
+    return CustomListTile(
+      avatarText: chat.avatar,
+      titleText: chat.contactName,
+      subtitleText: chat.lastMessagePreview ?? " ",
+      trailingText: chat.lastMessageTime == null ? null : _formatTimestamp(chat.lastMessageTime!),
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
     );
   }
 

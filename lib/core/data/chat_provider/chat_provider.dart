@@ -5,8 +5,8 @@ import 'chat_provider_interface.dart';
 
 class ChatProvider implements IChatProvider {
   final IChatStorage _storage;
-  final StreamController<List<Chat>> _chatsStreamController = StreamController.broadcast();
-  final Map<String, StreamController<List<MessageC>>> _messagesStreamControllers = {};
+  final StreamController<Iterable<ChatEntity>> _chatsStreamController = StreamController.broadcast();
+  final Map<String, StreamController<Iterable<MessageEntity>>> _messagesStreamControllers = {};
 
   ChatProvider(this._storage);
 
@@ -16,10 +16,10 @@ class ChatProvider implements IChatProvider {
   }
 
   @override
-  Stream<List<Chat>> get chatsStream => _chatsStreamController.stream;
+  Stream<Iterable<ChatEntity>> get chatsStream => _chatsStreamController.stream;
 
   @override
-  Stream<List<MessageC>> messagesStream(String chatId) {
+  Stream<Iterable<MessageEntity>> messagesStream(String chatId) {
     if (!_messagesStreamControllers.containsKey(chatId)) {
       _messagesStreamControllers[chatId] = StreamController.broadcast();
       _updateMessagesStream(chatId);
@@ -28,13 +28,13 @@ class ChatProvider implements IChatProvider {
   }
 
   @override
-  Future<void> storeChat(Chat chat) async {
+  Future<void> storeChat(ChatEntity chat) async {
     await _storage.storeChat(chat);
     _updateChatsStream();
   }
 
   @override
-  Future<void> storeMessage(MessageC message) async {
+  Future<void> storeMessage(MessageEntity message) async {
     await _storage.storeMessage(message);
     _updateChatsStream();
     _updateMessagesStream(message.chatId);
@@ -49,7 +49,7 @@ class ChatProvider implements IChatProvider {
   }
 
   @override
-  Future<void> deleteMessage(MessageC message) async {
+  Future<void> deleteMessage(MessageEntity message) async {
     await _storage.deleteMessage(message);
     _updateMessagesStream(message.chatId);
     _updateChatsStream();
@@ -66,8 +66,11 @@ class ChatProvider implements IChatProvider {
   }
 
   @override
-  Future<List<Chat>> getChats() {
-    return _storage.getChats();
+  Future<Iterable<ChatEntity>> getChats() {
+    return _storage.getChats().then((onValue) => onValue.toList()
+      ..sort(
+        (a, b) => (b.lastMessageTime ?? DateTime(0)).compareTo(a.lastMessageTime ?? DateTime(0)),
+      ));
   }
 
   void _updateChatsStream() async {
@@ -76,7 +79,13 @@ class ChatProvider implements IChatProvider {
   }
 
   void _updateMessagesStream(String chatId) async {
-    final messages = await _storage.getMessages(chatId);
+    final messages = await getMessages(chatId);
     _messagesStreamControllers[chatId]?.add(messages);
+  }
+
+  @override
+  Future<Iterable<MessageEntity>> getMessages(String chatId, {int? take, int? skip}) async {
+    final messages = await _storage.getMessages(chatId, take: take, skip: skip);
+    return messages.map((value) => value.copyWith(timestamp: value.timestamp.toLocal())).toList().reversed;
   }
 }
