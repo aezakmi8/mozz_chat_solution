@@ -102,7 +102,16 @@ class HiveChatStorage implements IChatStorage {
 
   @override
   Future<void> deleteChat(String chatId) async {
-    await _getBoxById<ChatHive>(chatsHiveKey, action: (box) => box.delete(chatId));
+    await _getBoxById<ChatHive>(chatsHiveKey, action: (box) async {
+      for (var key in box.keys) {
+        var chat = await box.get(key);
+
+        if (chat == null || chat.id != chatId) continue;
+
+        box.delete(key);
+        break;
+      }
+    });
 
     await _getBoxById<MessageHive>(_getMessagesKey(chatId), action: (box) async {
       for (var key in box.keys) {
@@ -111,7 +120,6 @@ class HiveChatStorage implements IChatStorage {
         if (message == null || message.chatId != chatId) continue;
 
         box.delete(key);
-        break;
       }
     });
   }
