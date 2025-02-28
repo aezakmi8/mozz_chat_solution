@@ -56,7 +56,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (chatId == null || _chatController == null) return;
 
     final newMessage = MessageC(
-      id: new DateTime.now().millisecondsSinceEpoch.toString(),
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       chatId: chatId!,
       sender: _chatController!.currentUser.id,
       text: event.message,

@@ -14,4 +14,6 @@ abstract interface class IChatProvider {
   Future<void> deleteMessage(MessageC message);
 
   void dispose();
+
+  Future<List<Chat>> getChats();
 }
