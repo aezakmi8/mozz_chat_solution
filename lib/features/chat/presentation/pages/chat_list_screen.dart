@@ -42,7 +42,7 @@ class ChatListScreen extends StatelessWidget {
                 ),
                 state.map(
                   loading: (_) => const _LoadingContent(),
-                  loaded: (loadedState) => _LoadedContent(loadedState.chats),
+                  loaded: (loadedState) => _LoadedContent(loadedState.filteredChats),
                 ),
               ],
             );

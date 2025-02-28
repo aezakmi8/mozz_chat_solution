@@ -36,7 +36,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
   FutureOr<void> _onUpdate(_Update event, Emitter<ChatListState> emit) {
     final filteredChats = _filterChats(event.chats, _currentFilter);
-    emit(ChatListState.loaded(filteredChats));
+    emit(ChatListState.loaded(event.chats, filteredChats));
   }
 
   Future<void> _onDelete(_Delete event, Emitter<ChatListState> emit) async {
@@ -48,7 +48,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (state is _Loaded) {
       final loadedState = state as _Loaded;
       final filteredChats = _filterChats(loadedState.chats, _currentFilter);
-      emit(ChatListState.loaded(filteredChats));
+      emit(ChatListState.loaded(loadedState.chats, filteredChats));
     }
   }
 
