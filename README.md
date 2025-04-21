@@ -1,5 +1,8 @@
 # mozz_chat_solution
 
+# Задача:
+[Тестовое задание_ Разработка прототипа мессенджера на Flutter (2).docx](https://github.com/user-attachments/files/19839304/_.Flutter.2.docx)
+
 ## Описание архитектуры
 
 Приложение мессенджера на Flutter использует паттерн BLoC для управления состоянием, обеспечивая реактивное обновление интерфейса через подписки на стримы. Локальное хранилище реализовано с помощью Hive, где чаты и сообщения сохраняются в отдельных боксах. Стримы в ChatProvider автоматически обновляют список чатов и сообщений, через подписку в слое презентации. Работа чата реализована с помощью плагина flutter_chat_ui, все сообщения сохраняются в Hive хранилище.
@@ -37,3 +40,5 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+
